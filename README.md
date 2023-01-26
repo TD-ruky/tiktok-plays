@@ -1,6 +1,8 @@
 # tiktok-plays
 
 To do : 
--factorize functions
--add screen actions
--see for py-desmume
+<ul>
+  <li>factorize functions</li>
+  <li>add screen actions</li>
+  <li>see for py-desmume</li>
+</ul>
