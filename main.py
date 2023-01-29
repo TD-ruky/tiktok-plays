@@ -1,12 +1,11 @@
 from TikTokLive import TikTokLiveClient
 from TikTokLive.types.events import CommentEvent, ConnectEvent
 import json
-import pyautogui
 
-from actions import action
+from userActions.keyActions import action
 
 # Instantiate the client with the user's username
-client: TikTokLiveClient = TikTokLiveClient(unique_id="@yourid")
+client: TikTokLiveClient = TikTokLiveClient(unique_id="@supersourie")
 
 
 # Define how you want to handle specific events via decorator
@@ -30,7 +29,7 @@ async def on_comment(event: CommentEvent):
         data[event.user.nickname]={"posts" : 1}
 
     action(event.comment)
-
+    
     # open json file to write
     with open("data.json", "w") as outfile:
         json.dump(data, outfile)
