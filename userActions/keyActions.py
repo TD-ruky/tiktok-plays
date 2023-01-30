@@ -21,7 +21,7 @@ def isValidKeyRegex(message, regex):
     else:
         return 0
 
-def action(message):
+def keyAction(message):
     i=0
     while i < isValidKeyRegex(message, regexUp):
         pydirectinput.press("up")

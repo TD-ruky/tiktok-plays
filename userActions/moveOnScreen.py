@@ -31,5 +31,4 @@ def moveFromTo(p1, p2):
         # get next point on line
         cP[1] = int(m * cP[0] + i)
         # slow it down
-        time.sleep(0.0005)
-    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
+        time.sleep(0.005)

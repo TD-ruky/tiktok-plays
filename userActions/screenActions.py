@@ -4,14 +4,16 @@ import win32con
 import re
 import time
 from appDimensions import get_active_app_name
-from moveOnScreen import moveFromTo
+from moveOnScreenTest import moveFromTo
 
 uselessHeight = 80
 
 regexSetCursor = r"^(100|[1-9]?[0-9])-(100|[1-9]?[0-9])-?([0-4])?$"
+#x-y-duration?       => move
 regexMoveOnScreen = r"^(100|[1-9]?[0-9])-(100|[1-9]?[0-9])-(100|[1-9]?[0-9])-(100|[1-9]?[0-9])$"
-regexCircle= r"^c(100|[1-9]?[0-9])-(100|[1-9]?[0-9])-([1-9])-?([5-9])?$"
-# x-y-numberOfCircles-radius?ù
+#x-y-x2-y2        => pick someone and target something
+regexCircle= r"^c(100|[1-9]?[0-9])-(100|[1-9]?[0-9])-([1-9])$"
+#c x-y-numberOfCircles
 
 def getScreenCoordinates():
     window = pyautogui.getWindowsWithTitle(get_active_app_name())[0]
@@ -22,17 +24,8 @@ def getScreenCoordinates():
     return xmin, xmax, ymin, ymax
 
 
-def setCursor():
+def setCursor(x,y,duration):
 
-    match =re.match(regexSetCursor, test)
-    x = int(match.group(1))
-    y = int(match.group(2))
-    if (match.group(3)) is None :
-        duration = 0.1
-        print("null")
-    else:
-        duration = int(match.group(3))
-    
     xmin, xmax, ymin, ymax = getScreenCoordinates()
     
     newx = xmin + int((xmax-xmin)*x/100)
@@ -45,25 +38,25 @@ def setCursor():
     time.sleep(duration)
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
 
+def moveOnScreen(x1,y1,x2,y2):   
 
-test = "c50-50-6"
-
-def drawCircle():
-    match =re.match(regexCircle, test)
-    x = int(match.group(1))
-    y = int(match.group(2))
     xmin, xmax, ymin, ymax = getScreenCoordinates()
-    numberOfCircle = int(match.group(3))
-    if (match.group(4)) is None :
-        radius = int((xmax-xmin)*20/100)
-    else:
-        radius = int(match.group(4))
-    i=0
-    
+    x1,y1,x2,y2 = int(x1), int(y1), int(x2), int(y2)
+    fromX = xmin + int((xmax-xmin)*x1/100)
+    fromY = ymin + int((ymax-ymin)*y1/100)
+    toX = xmin + int((xmax-xmin)*x2/100)
+    toY = ymin + int((ymax-ymin)*y2/100)
+    moveFromTo([fromX, fromY],[toX, toY])    
+    time.sleep(0.2)
+    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
+
+def drawCircle(x,y,numberOfCircle):
+    xmin, xmax, ymin, ymax = getScreenCoordinates()
+    radius=30
     newx = xmin + int((xmax-xmin)*x/100)
     newy = ymin + int((ymax-ymin)*y/100)
+    radius = int((xmax-xmin)*radius/100)
 
-    ##45 45, 55 45, 55 55, 45 55 
     smallerX = newx - radius
     if (smallerX < xmin) :
         smallerX = xmin
@@ -77,30 +70,46 @@ def drawCircle():
     if (biggerY > ymax) :
         biggerY = ymax
 
-    #moveFromTo([xmin, ymin],[xmax, ymax])
-    print(xmin, xmax, ymin, ymax)
-    print(smallerX, biggerY, smallerX+1, smallerY)
-    moveFromTo([smallerX, smallerY],[biggerX-1, smallerY])
-    moveFromTo([biggerX, smallerY],[biggerX-1, biggerY])
-    moveFromTo([biggerX, biggerY],[smallerX+1, biggerY])
-    moveFromTo([smallerX, biggerY],[smallerX+1, smallerY])
-    moveFromTo([smallerX, smallerY],[biggerX-1, smallerY])
-        
+    i=0
+    while i<numberOfCircle:
+        moveFromTo([smallerX, smallerY],[biggerX, smallerY])
+        moveFromTo([biggerX, smallerY],[biggerX, biggerY])
+        moveFromTo([biggerX, biggerY],[smallerX, biggerY])
+        moveFromTo([smallerX, biggerY],[smallerX, smallerY])
+        i +=1
+    moveFromTo([smallerX, smallerY],[biggerX, smallerY])
+    moveFromTo([biggerX, smallerY],[biggerX, biggerY])
+    #necessary to close the last circle
     
 
-if re.match(regexSetCursor, test):
-    setCursor()
-elif re.match(regexMoveOnScreen, test):
-    match =re.match(regexMoveOnScreen, test)
-
-    xmin, xmax, ymin, ymax = getScreenCoordinates()
     
-    newfirstx = xmin + int((xmax-xmin)*int(match.group(1))/100)
-    newfirsty = ymin + int((ymax-ymin)*int(match.group(2))/100)
-    newsecondx = xmin + int((xmax-xmin)*int(match.group(3))/100)
-    newsecondy = ymin + int((ymax-ymin)*int(match.group(4))/100)
-    moveFromTo([newfirstx, newfirsty],[newsecondx, newsecondy])
-elif re.match(regexCircle, test):
-    drawCircle()
-else:
-    print("error")
+message = "0-0-50-50"
+
+def isValidScreenAction(message, regex):
+    if(re.match(regex, message, re.IGNORECASE)) : 
+        return True
+    else:
+        return False
+
+def screenAction(message):
+    if isValidScreenAction(message, regexSetCursor) == True :
+        match =re.match(regexSetCursor, message)
+        x = int(match.group(1))
+        y = int(match.group(2))
+        if (match.group(3)) is None :
+            duration = 0.1
+        else:
+            duration = int(match.group(3))
+        setCursor(x,y,duration)
+
+    elif isValidScreenAction(message, regexMoveOnScreen) == True :
+        match = re.match(regexMoveOnScreen, message)
+        moveOnScreen(match.group(1),match.group(2),match.group(3),match.group(4))
+
+    elif isValidScreenAction(message, regexCircle) == True :
+        match =re.match(regexCircle, message)
+        x = int(match.group(1))
+        y = int(match.group(2))
+        numberOfCircle = int(match.group(3))
+        drawCircle(x,y,numberOfCircle)
+        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
