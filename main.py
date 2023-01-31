@@ -2,10 +2,11 @@ from TikTokLive import TikTokLiveClient
 from TikTokLive.types.events import CommentEvent, ConnectEvent
 import json
 
-from userActions.keyActions import action
+from keyActions import keyAction
+from screenActions import screenAction
 
 # Instantiate the client with the user's username
-client: TikTokLiveClient = TikTokLiveClient(unique_id="@supersourie")
+client: TikTokLiveClient = TikTokLiveClient(unique_id="@botsgames")
 
 
 # Define how you want to handle specific events via decorator
@@ -28,7 +29,8 @@ async def on_comment(event: CommentEvent):
     else:
         data[event.user.nickname]={"posts" : 1}
 
-    action(event.comment)
+    keyAction(event.comment)
+    screenAction(event.comment)
     
     # open json file to write
     with open("data.json", "w") as outfile:
